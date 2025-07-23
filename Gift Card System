@@ -1,0 +1,128 @@
+import java.io.*;
+import java.util.*;
+
+class GiftCard {
+    private String cardID;
+    private double balance;
+
+    GiftCard(String cardID, double balance) {
+        this.cardID = cardID;
+        this.balance = balance;
+    }
+
+    public String getCardID() {
+        return cardID;
+    }
+
+    public double getBalance() {
+        return balance;
+    }
+
+    public void load(double amount) {
+        balance += amount;
+        recordTransaction("Loaded R" + amount);
+    }
+
+    public void spend(double amount) {
+        if (amount > balance) {
+            System.out.println("Insufficient balance.");
+        } else {
+            balance -= amount;
+            recordTransaction("Spent R" + amount);
+        }
+    }
+
+    public void showBalance() {
+        System.out.println("Card ID: " + cardID + " | Balance: R" + balance);
+    }
+
+    public void viewHistory() {
+        System.out.println("Transaction History for Card ID: " + cardID);
+        try (BufferedReader br = new BufferedReader(new FileReader(cardID + ".txt"))) {
+            String line;
+            while ((line = br.readLine()) != null)
+                System.out.println(line);
+        } catch (IOException e) {
+            System.out.println("No transaction history found.");
+        }
+    }
+
+    private void recordTransaction(String detail) {
+        try (FileWriter fw = new FileWriter(cardID + ".txt", true)) {
+            fw.write(new Date() + " - " + detail + "\n");
+        } catch (IOException e) {
+            System.out.println("Error saving transaction.");
+        }
+    }
+}
+
+public class GiftCardApp {
+    static Scanner sc = new Scanner(System.in);
+    static Map<String, GiftCard> cards = new HashMap<>();
+
+    public static void main(String[] args) {
+        int choice;
+        do {
+            System.out.println("\n--- GIFT CARD SYSTEM ---");
+            System.out.println("1. Create Gift Card");
+            System.out.println("2. Load Money");
+            System.out.println("3. Spend Money");
+            System.out.println("4. View Balance");
+            System.out.println("5. View Transaction History");
+            System.out.println("6. Exit");
+            System.out.print("Enter choice: ");
+            choice = sc.nextInt();
+            sc.nextLine();
+
+            switch (choice) {
+                case 1 -> createCard();
+                case 2 -> loadMoney();
+                case 3 -> spendMoney();
+                case 4 -> viewBalance();
+                case 5 -> viewHistory();
+                case 6 -> System.out.println("Thank you!");
+                default -> System.out.println("Invalid choice.");
+            }
+        } while (choice != 6);
+    }
+
+    static void createCard() {
+        System.out.print("Enter new Card ID: ");
+        String id = sc.nextLine();
+        GiftCard card = new GiftCard(id, 0.0);
+        cards.put(id, card);
+        System.out.println("Gift card created.");
+    }
+
+    static GiftCard getCard() {
+        System.out.print("Enter Card ID: ");
+        String id = sc.nextLine();
+        return cards.getOrDefault(id, new GiftCard(id, 0.0)); // New card if not found
+    }
+
+    static void loadMoney() {
+        GiftCard card = getCard();
+        System.out.print("Enter amount to load: R");
+        double amount = sc.nextDouble();
+        card.load(amount);
+        cards.put(card.getCardID(), card);
+    }
+
+    static void spendMoney() {
+        GiftCard card = getCard();
+        System.out.print("Enter amount to spend: R");
+        double amount = sc.nextDouble();
+        card.spend(amount);
+        cards.put(card.getCardID(), card);
+    }
+
+    static void viewBalance() {
+        GiftCard card = getCard();
+        card.showBalance();
+    }
+
+    static void viewHistory() {
+        GiftCard card = getCard();
+        card.viewHistory();
+    }
+}
